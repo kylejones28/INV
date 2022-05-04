@@ -43,10 +43,20 @@ namespace DiskInventoryApps.Controllers
             if (ModelState.IsValid)
             {
                 if (borrower.BorrowerId == 0)
-                    context.Borrowers.Add(borrower);
+                {
+                    //context.Borrowers.Add(borrower);
+                    context.Database.ExecuteSqlRaw("execute sp_ins_borrower @p0, @p1, @p2",
+                    parameters: new[] { borrower.Fname, borrower.Lname, borrower.PhoneNum });
+                    TempData["message"] = "Borrower added.";
+                }
                 else
-                    context.Borrowers.Update(borrower);
-                context.SaveChanges();
+                {
+                    //context.Borrowers.Update(borrower);
+                  context.Database.ExecuteSqlRaw("execute sp_upd_borrower @p0, @p1, @p2, @p3",
+                  parameters: new[] { borrower.BorrowerId.ToString(), borrower.Fname, borrower.Lname, borrower.PhoneNum });
+                    TempData["message"] = "Borrower updated.";
+                }    
+                  //context.SaveChanges();   
                 return RedirectToAction("Index", "Borrower");
             }
             else
@@ -68,8 +78,11 @@ namespace DiskInventoryApps.Controllers
         [HttpPost]
         public IActionResult Delete(Borrower borrower)
         {
-            context.Borrowers.Remove(borrower);
-            context.SaveChanges();
+            //context.Borrowers.Remove(borrower);
+            context.Database.ExecuteSqlRaw("execute sp_del_borrower @p0",
+                       parameters: new[]  {borrower.BorrowerId.ToString()});
+            TempData["message"] = "Borrower Removed.";
+            //context.SaveChanges();
             return RedirectToAction("Index", "Borrower");
         }
     }

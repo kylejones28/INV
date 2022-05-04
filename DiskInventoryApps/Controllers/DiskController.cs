@@ -47,23 +47,38 @@ namespace DiskInventoryApps.Controllers
             if (ModelState.IsValid)
             {
                 if (disk.DiskId == 0)
-                    context.Disks.Add(disk);
+                {
+                    //context.Disks.Add(disk);
+                    context.Database.ExecuteSqlRaw("execute sp_ins_disk @p0, @p1, @p2, @p3, @p4",
+                     parameters: new[] { disk.DiskName, disk.ReleaseDate.ToString(), disk.GenreId.ToString(), disk.StatusId.ToString(), disk.DiskTypeId.ToString() });
+                     TempData["message"] = "Disk added.";
+
+                }
+                    
                 else
-                    context.Disks.Update(disk);
-                context.SaveChanges();
+                {
+
+                    //context.Disks.Update(disk);
+                    context.Database.ExecuteSqlRaw("execute sp_upd_disk @p0, @p1, @p2, @p3, @p4, @p5",
+                       parameters: new[] { disk.DiskId.ToString(), disk.DiskName, disk.ReleaseDate.ToString(), disk.GenreId.ToString(), disk.StatusId.ToString(), disk.DiskTypeId.ToString() });
+                    TempData["message"] = "Disk updated.";
+                    
+
+                }
+
+                 //context.SaveChanges();   
                 return RedirectToAction("Index", "Disk");
             }
             else
             {
-
                 ViewBag.Action = (disk.DiskId == 0) ? "Add" : "Edit";
-                ViewBag.Genres = context.Genres.OrderBy(g => g.Description).ToList();
-                ViewBag.Statuses = context.Statuses.OrderBy(s => s.Description).ToList();
-                ViewBag.DiskTypes = context.DiskTypes.OrderBy(t => t.Description).ToList();
-                return View(disk);
+                        ViewBag.Genres = context.Genres.OrderBy(g => g.Description).ToList();
+                        ViewBag.Statuses = context.Statuses.OrderBy(s => s.Description).ToList();
+                        ViewBag.DiskTypes = context.DiskTypes.OrderBy(t => t.Description).ToList();
+                        return View(disk);
 
             }
-
+              
         }
         [HttpGet]
         public IActionResult Delete(int id)
@@ -74,8 +89,10 @@ namespace DiskInventoryApps.Controllers
         [HttpPost]
         public IActionResult Delete(Disk disk)
         {
-            context.Disks.Remove(disk);
-            context.SaveChanges();
+            //context.Disks.Remove(disk);
+            //context.SaveChanges();
+            context.Database.ExecuteSqlRaw("execute sp_del_disk @p0", parameters: new[] { disk.DiskId.ToString() });
+            TempData["message"] = "Disk Removed.";
             return RedirectToAction("Index", "Disk");
         }
     }
